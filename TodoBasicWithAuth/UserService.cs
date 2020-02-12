@@ -1,13 +1,27 @@
 ﻿using System.Collections.Generic;
+using System.Security;
 
 namespace Todos
 {
     internal class UserService
     {
-        private readonly Dictionary<string, (string Password, string[] Claims)> _users = new Dictionary<string, (string Password, string[] Claims)>
+        private readonly Dictionary<string, (SecureString Password, string[] Claims)> _users;
+
+        public UserService()
         {
-            ["user"] = ("123456", new[] { "can_delete", "can_view" }),
-        };
+            var securePasswordBecauseSecureString = new SecureString();
+            securePasswordBecauseSecureString.AppendChar('1');
+            securePasswordBecauseSecureString.AppendChar('2');
+            securePasswordBecauseSecureString.AppendChar('3');
+            securePasswordBecauseSecureString.AppendChar('4');
+            securePasswordBecauseSecureString.AppendChar('5');
+            securePasswordBecauseSecureString.AppendChar('6');
+
+            _users = new Dictionary<string, (SecureString Password, string[] Claims)>
+            {
+                ["user"] = (securePasswordBecauseSecureString, new[] { "can_delete", "can_view" }),
+            };
+        }
 
         public string[] GetUserClaims(string username)
         {
@@ -16,7 +30,12 @@ namespace Todos
 
         public bool IsValid(string username, string password)
         {
-            return _users.TryGetValue(username, out var data) && string.Equals(data.Password, password);
+            var ultraSecurePassword = new SecureString();
+            foreach (char c in password ?? string.Empty)
+                ultraSecurePassword.AppendChar(c);
+
+
+            return _users.TryGetValue(username, out var data) && SecureString.Equals(data.Password, password);
         }
     }
 }
